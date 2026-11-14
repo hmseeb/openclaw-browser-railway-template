@@ -1,0 +1,73 @@
+name: image
+
+# Builds the Railway image on top of an official OpenClaw release, runs the
+# contract tests against it, and only then pushes it. `latest` moves only to a
+# build that passed, so a broken upstream release never reaches new deploys.
+#
+# Runs on push, by hand (optionally for a specific version), and daily to pick
+# up new upstream stable releases.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: OpenClaw version (blank = latest stable release)
+        required: false
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/openclaw-browser-railway
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve OpenClaw version
+        id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT: ${{ github.event.inputs.version }}
+        run: |
+          latest="$(gh release view -R openclaw/openclaw --json tagName --jq .tagName)"
+          latest="${latest#v}"
+          v="${INPUT:-$latest}"
+          v="${v#v}"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "is_latest=$([ "$v" = "$latest" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "OpenClaw $v"
+
+      - name: Skip if this version is already published (scheduled runs only)
+        id: skip
+        if: github.event_name == 'schedule'
+        run: |
+          if docker manifest inspect "$IMAGE:${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.skip.outputs.skip != 'true'
+        run: docker build --build-arg OPENCLAW_VERSION=${{ steps.v.outputs.version }} -t candidate .
+
+      - name: Contract tests
+        if: steps.skip.outputs.skip != 'true'
+        run: test/contract.sh candidate
+
+      - name: Push
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          tags="${{ steps.v.outputs.version }}"
+          [ "${{ steps.v.outputs.is_latest }}" = true ] && tags="$tags latest"
+          for tag in $tags; do
+            docker tag candidate "$IMAGE:$tag"
+            docker push "$IMAGE:$tag"
+          done

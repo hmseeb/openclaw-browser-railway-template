@@ -1,0 +1,81 @@
+{
+  "$note": "Build sheet for the OpenClaw (w/ Browser) Railway template. upsert.py writes this straight into the template with templateUpsertConfig; build_source.py materializes it into a live project. Evidence for every non-obvious choice is in the $note keys and in README.md.",
+  "name": "OpenClaw (w/ Browser)",
+  "services": {
+    "OpenClaw": {
+      "icon": "https://openclaw.ai/favicon.svg",
+      "source": {
+        "image": "ghcr.io/hmseeb/openclaw-browser-railway:latest",
+        "$note": "Thin layer over the official ghcr.io/openclaw/openclaw:<version>-browser image (Chromium baked in), built by .github/workflows/image.yml. :latest only moves after test/contract.sh passes against the new upstream release, so new deploys never get an untested build. Incumbents build from source on every deploy, which is where their out-of-memory and pnpm build failures come from."
+      },
+      "deploy": {
+        "healthcheckPath": "/healthz",
+        "restartPolicyType": "ON_FAILURE",
+        "$note": "No startCommand: Railway would discard the image ENTRYPOINT (tini + railway/boot.sh). /healthz is upstream's liveness probe; first boot onboards before the gateway listens and can wait up to 120s after a crashed predecessor, inside the fixed 300s template healthcheck window."
+      },
+      "variables": {
+        "PORT": {
+          "defaultValue": "8080",
+          "description": "Port the OpenClaw gateway listens on. The public domain targets this port."
+        },
+        "OPENCLAW_GATEWAY_TOKEN": {
+          "defaultValue": "${{secret(48)}}",
+          "description": "Your login secret for the Control UI. Generated for you; treat it like a password.",
+          "$note": "Stored in openclaw.json only as an env SecretRef (gateway.auth.token = {source: env}), so rotating it is a variable change plus redeploy."
+        },
+        "OPENCLAW_LOGIN_URL": {
+          "defaultValue": "https://${{RAILWAY_PUBLIC_DOMAIN}}/#token=${{OPENCLAW_GATEWAY_TOKEN}}",
+          "description": "Open this to log in. The token rides in the URL fragment, which the browser never sends to the server.",
+          "$note": "Convenience only; nothing reads it. Saves the deployer from finding the domain and pasting the token."
+        },
+        "ANTHROPIC_API_KEY": {
+          "isOptional": true,
+          "description": "Anthropic API key. Set at least one provider key (here or below). You can add or change keys later; OpenClaw reads them from the environment."
+        },
+        "OPENAI_API_KEY": {
+          "isOptional": true,
+          "description": "OpenAI API key (optional)."
+        },
+        "OPENROUTER_API_KEY": {
+          "isOptional": true,
+          "description": "OpenRouter API key (optional). One key for hundreds of models."
+        },
+        "GEMINI_API_KEY": {
+          "isOptional": true,
+          "description": "Google Gemini API key (optional)."
+        },
+        "OPENCLAW_MODEL": {
+          "isOptional": true,
+          "description": "Primary model as provider/model, e.g. anthropic/claude-haiku-4-5. Leave empty for the provider default. Changing it later takes effect on the next deploy.",
+          "$note": "Applied with `openclaw models set` on boot only when it differs from the current primary, so a model picked in the Control UI is kept while this stays empty."
+        },
+        "TELEGRAM_BOT_TOKEN": {
+          "isOptional": true,
+          "description": "Telegram bot token from @BotFather (optional). The bot is connected on first boot; approve your first DM in the Control UI."
+        },
+        "OPENCLAW_BACKUP_EVERY": {
+          "defaultValue": "24h",
+          "description": "How often to back up config, sessions and workspace to /data/backups (7 daily and 4 weekly kept). Set to off to disable.",
+          "$note": "Uses upstream's own scheduled backups (openclaw backup enable) against a filesystem storage location on the volume. Local only: protects against a broken config or an agent wiping its workspace, not against losing the volume."
+        },
+        "OPENCLAW_AUTO_APPROVE_BROWSERS": {
+          "defaultValue": "true",
+          "description": "Approve browsers that log in with the gateway token automatically, so you never need a shell to pair a new device. Set to false to approve each device yourself.",
+          "$note": "Measured on the live probe: a wrong token never creates a pending pairing request, so approving pending Control UI requests grants nothing the token did not. railway/approve-browsers.mjs polls the pending table read-only every 3s and calls the CLI only when needed (one CLI call is about 1.1s of CPU, too costly to poll)."
+        },
+        "OPENCLAW_SAFE_MODE": {
+          "defaultValue": "false",
+          "description": "Set to true and redeploy to start from a fresh config if OpenClaw broke itself. Your config, sessions and workspace stay on the volume."
+        }
+      },
+      "volumeMounts": {
+        "mountPath": "/data",
+        "$note": "State, workspace, HOME, Homebrew and backups all live under /data so installs and logins survive redeploys."
+      },
+      "networking": {
+        "port": 8080,
+        "$note": "Explicit target port. A domain defaulting to 3000 while the app listens on 8080 is the incumbents' second most reported failure."
+      }
+    }
+  }
+}
