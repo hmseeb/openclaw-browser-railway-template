@@ -3,6 +3,8 @@
 # adds what a Railway deploy needs that upstream leaves to the operator.
 ARG OPENCLAW_VERSION=2026.11.3
 FROM ghcr.io/openclaw/openclaw:${OPENCLAW_VERSION}-browser
+LABEL org.opencontainers.image.source=https://github.com/hmseeb/openclaw-browser-railway-template \
+      org.opencontainers.image.description="OpenClaw (official browser image) prepared for Railway"
 
 USER root
 
