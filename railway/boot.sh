@@ -108,7 +108,7 @@ if [ "$(oc config get gateway.mode 2>/dev/null | tr -d '"[:space:]')" != local ]
   done
 fi
 
-# Railway invariants, re-applied every boot in one validated write.
+# Railway invariants, re-applied every boot in one validated write (JSON5).
 # 100.64.0.0/10 is where Railway's edge proxy connects from; without it every
 # request fails with proxy_attribution_required.
 origins='[]'
@@ -127,6 +127,10 @@ oc config patch --stdin >/dev/null <<EOF
     ${RAILWAY_PUBLIC_DOMAIN:+publicOrigin: \"https://$RAILWAY_PUBLIC_DOMAIN\",}
     controlUi: { allowedOrigins: $origins },
   },
+  // Railway's runtime has no user namespaces for Chromium's sandbox; without this
+  // the browser tool dies with "Failed to start Chrome CDP". The container is the
+  // isolation boundary, as in upstream's Docker guidance.
+  browser: { noSandbox: true },
 }
 EOF
 
