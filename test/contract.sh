@@ -6,6 +6,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 IMG=${1:-openclaw-browser:test}
+# EXPECT_BROWSER=0 for the lite (w/ Dashboard) image, which ships no Chromium.
+EXPECT_BROWSER=${EXPECT_BROWSER:-1}
 [ "${1:-}" ] || docker build -q -t "$IMG" . >/dev/null || { echo "build failed"; exit 1; }
 
 NAME=ocb-contract-$$
@@ -48,8 +50,12 @@ check "gateway token is an env ref, not plaintext" "x '! grep -q $TOKEN /data/.o
 check "publicOrigin set from RAILWAY_PUBLIC_DOMAIN" "x 'grep -q https://example.up.railway.app /data/.openclaw/openclaw.json'"
 check "HOME persists on the volume" "docker exec -u node $NAME sh -c 'grep -qz ^HOME=/data/home\$ /proc/\$(pgrep -u node -f ^openclaw-gateway)/environ'"
 check "homebrew lives on the volume" "x 'test -x /data/.linuxbrew/bin/brew && readlink /home/linuxbrew/.linuxbrew | grep -q /data/.linuxbrew'"
-check "browser tool launches Chromium and opens a page" "docker exec -u node -e HOME=/data/home -e OPENCLAW_STATE_DIR=/data/.openclaw -w /app $NAME sh -c 'for i in 1 2 3; do node openclaw.mjs browser open https://example.com --json 2>&1 | grep -q tabId && exit 0; sleep 10; done; exit 1'"
-check "chromium is available for the browser tool" "x 'ls \$PLAYWRIGHT_BROWSERS_PATH | grep -q chromium'"
+if [ "$EXPECT_BROWSER" = 1 ]; then
+  check "browser tool launches Chromium and opens a page" "docker exec -u node -e HOME=/data/home -e OPENCLAW_STATE_DIR=/data/.openclaw -w /app $NAME sh -c 'for i in 1 2 3; do node openclaw.mjs browser open https://example.com --json 2>&1 | grep -q tabId && exit 0; sleep 10; done; exit 1'"
+  check "chromium is available for the browser tool" "x 'ls \$PLAYWRIGHT_BROWSERS_PATH | grep -q chromium'"
+else
+  check "no Chromium in the lite image" "x '! ls /home/node/.cache/ms-playwright 2>/dev/null | grep -q chromium'"
+fi
 check "control UI rejects requests without the token" "x '! curl -sf http://127.0.0.1:8080/control-ui-config.json'"
 
 # Backups: interval forced tiny above; wait for the first archive.

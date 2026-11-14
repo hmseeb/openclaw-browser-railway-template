@@ -21,13 +21,23 @@ permissions:
   contents: read
   packages: write
 
-env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/openclaw-browser-railway
-
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: openclaw-browser-railway   # OpenClaw (w/ Browser)
+            variant: "-browser"
+            expect_browser: "1"
+          - name: openclaw-dashboard-railway # OpenClaw (w/ Dashboard), no Chromium
+            variant: ""
+            expect_browser: "0"
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
+      EXPECT_BROWSER: ${{ matrix.expect_browser }}
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +65,7 @@ jobs:
 
       - name: Build
         if: steps.skip.outputs.skip != 'true'
-        run: docker build --build-arg OPENCLAW_VERSION=${{ steps.v.outputs.version }} -t candidate .
+        run: docker build --build-arg OPENCLAW_VERSION=${{ steps.v.outputs.version }} --build-arg OPENCLAW_VARIANT=${{ matrix.variant }} -t candidate .
 
       - name: Contract tests
         if: steps.skip.outputs.skip != 'true'

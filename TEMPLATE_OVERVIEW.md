@@ -74,7 +74,7 @@ On every boot the config is validated. If it is broken, `openclaw doctor --fix` 
 
 **Resources and cost**
 
-OpenClaw's gateway uses about 1 to 1.5 GB of RAM at idle, more while the browser tool runs. Expect Railway usage of roughly $10 to $20 a month for one always-on instance, plus your AI provider's charges. Pick a smaller model with `OPENCLAW_MODEL` to keep provider costs down.
+Measured on Railway: the OpenClaw gateway idles at about 1.1 GB of RAM, and about 2.3 GB once the browser tool has started Chromium. At Railway's memory pricing that is roughly $12 to $25 a month for one always-on instance, plus your AI provider's charges. Pick a smaller model with `OPENCLAW_MODEL` to keep provider costs down.
 
 **Security**
 

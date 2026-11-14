@@ -13,8 +13,9 @@ import uuid
 sys.path.insert(0, str(pathlib.Path("~/.claude/skills/create-template-for-railway/scripts").expanduser()))
 import rw  # noqa: E402
 
-HERE = pathlib.Path(__file__).parent
 import os
+# SHEET_DIR=dashboard selects the OpenClaw (w/ Dashboard) sheet.
+HERE = pathlib.Path(os.environ.get("SHEET_DIR") or pathlib.Path(__file__).parent)
 # Test copies go to My Projects: TEMPLATE_WS=d10da65a-... TEMPLATE_IDFILE=template-id.test
 WORKSPACE = os.environ.get("TEMPLATE_WS", "fc4796db-2c6c-4354-a564-d4a1d900af53")  # default Auromations
 
