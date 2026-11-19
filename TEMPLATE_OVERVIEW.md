@@ -84,7 +84,7 @@ Your gateway is reachable on a public HTTPS URL and protected by `OPENCLAW_GATEW
 
 **Updating**
 
-New deploys are pinned to a tested image tag, `<openclaw-version>-r<n>` (for example `2026.11.5-r1`). To update, set the service's image to a newer tag from the [image page](https://github.com/hmseeb/openclaw-browser-railway-template/pkgs/container/openclaw-browser-railway) and redeploy. Use `:latest` instead to follow every OpenClaw release that passed this template's automated checks.
+New deploys are pinned to a tested image tag: the OpenClaw version plus a revision, for example `2026.11.5-r1`. To update, set the service's image to a newer tag from the [image page](https://github.com/hmseeb/openclaw-browser-railway-template/pkgs/container/openclaw-browser-railway) and redeploy. Use `:latest` instead to follow every OpenClaw release that passed this template's automated checks.
 
 **Troubleshooting**
 
