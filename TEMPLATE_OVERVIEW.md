@@ -1,6 +1,6 @@
 # Deploy and Host OpenClaw on Railway
 
-> **Needs Railway's Hobby plan (or higher) and about 2 GB of RAM.** Measured on Railway with OpenClaw 2026.11.5, the service idles at about 1.8 GB and reaches about 3 GB while the browser tool runs Chromium. Trial (1 GB) and Free (0.5 GB) services run out of memory and restart in a loop.
+**Needs Railway's Hobby plan (or higher) and about 2 GB of RAM.** Measured on Railway with OpenClaw 2026.11.5, the service idles at about 1.8 GB and reaches about 3 GB while the browser tool runs Chromium. Trial (1 GB) and Free (0.5 GB) services run out of memory and restart in a loop.
 
 OpenClaw is a personal AI agent that runs on your own server. Talk to it from the web Control UI, Telegram, WhatsApp, Discord, Slack and 20+ other chat apps. It can browse the web, run commands, manage files and work on tasks around the clock.
 
