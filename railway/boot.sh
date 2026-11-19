@@ -48,6 +48,28 @@ if [ -d /home/linuxbrew/.linuxbrew ] && [ ! -L /home/linuxbrew/.linuxbrew ]; the
   ln -s "$DATA/.linuxbrew" /home/linuxbrew/.linuxbrew
 fi
 
+# A killed container (OOM, crash, forced redeploy) leaves its Gateway lock on the
+# volume. Since 2026.11.5 upstream never ages such a lock out when the holder ran
+# under another hostname, so every state write (onboard, config patch, the
+# gateway itself) refuses forever. Nothing in this container runs the gateway yet
+# and Railway attaches a volume to one container at a time, so any holder found
+# here has stopped: recover exactly the lock records the inspection reported.
+# The inspection must not load openclaw.json: a corrupted file would make it bail
+# out before it looks at the lock, so point it at a config that does not exist.
+recover_stale_lock() {
+  local out fp
+  lock() { as_node env OPENCLAW_CONFIG_PATH=/tmp/openclaw-lock-recovery.json node /app/openclaw.mjs gateway recover-lock --json "$@"; }
+  out=$(lock 2>/dev/null) || return 0
+  fp=$(printf '%s' "$out" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s.slice(s.indexOf("{")));if(j.present&&j.confirmation)console.log(j.confirmation)}catch{}})')
+  [ -n "$fp" ] || return 0
+  if lock --confirm "$fp" >/dev/null 2>&1; then
+    log "recovered the Gateway lock left by a stopped container"
+  else
+    log "could not recover the stale Gateway lock; run: openclaw gateway recover-lock"
+  fi
+}
+recover_stale_lock
+
 CFG=$OPENCLAW_STATE_DIR/openclaw.json
 if truthy "${OPENCLAW_SAFE_MODE:-}"; then
   SAFE=$OPENCLAW_STATE_DIR/safe-mode

@@ -59,7 +59,7 @@ jobs:
         id: skip
         if: github.event_name == 'schedule'
         run: |
-          if docker manifest inspect "$IMAGE:${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+          if docker manifest inspect "$IMAGE:${{ steps.v.outputs.version }}-r$(cat REVISION)" >/dev/null 2>&1; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -75,7 +75,10 @@ jobs:
         if: steps.skip.outputs.skip != 'true'
         run: |
           echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          tags="${{ steps.v.outputs.version }}"
+          # <version>-r<REVISION> is what the templates pin; bump REVISION when this
+          # repo's layer changes for an upstream version that was already pushed.
+          # <version> and latest keep moving for older deployers.
+          tags="${{ steps.v.outputs.version }} ${{ steps.v.outputs.version }}-r$(cat REVISION)"
           [ "${{ steps.v.outputs.is_latest }}" = true ] && tags="$tags latest"
           for tag in $tags; do
             docker tag candidate "$IMAGE:$tag"

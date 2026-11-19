@@ -1,7 +1,7 @@
 # Thin layer over the official OpenClaw image. Nothing is compiled here: the
 # upstream release is used as-is, and this image only
 # adds what a Railway deploy needs that upstream leaves to the operator.
-ARG OPENCLAW_VERSION=2026.11.3
+ARG OPENCLAW_VERSION=2026.11.5
 # "-browser" (Chromium baked in) for OpenClaw (w/ Browser); empty for the lite
 # OpenClaw (w/ Dashboard) image, which is about 470 MB smaller and idles at half the RAM.
 ARG OPENCLAW_VARIANT=-browser

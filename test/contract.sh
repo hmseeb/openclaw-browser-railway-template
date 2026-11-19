@@ -68,6 +68,19 @@ docker restart "$NAME" >/dev/null; docker rm -f "$NAME" >/dev/null
 check "reboot with OPENCLAW_MODEL override" "boot -e OPENCLAW_MODEL=anthropic/claude-haiku-4-5"
 check "OPENCLAW_MODEL becomes the primary model" "x 'grep -q claude-haiku-4-5 /data/.openclaw/openclaw.json'"
 
+# A killed container (OOM, crash) leaves its Gateway lock on the volume, and the
+# next container has another hostname. It must still boot without a manual
+# `openclaw gateway recover-lock`.
+docker kill "$NAME" >/dev/null; docker rm -f "$NAME" >/dev/null
+check "boots after the previous container was killed (OOM)" boot
+check "the killed container's lock was recovered" "docker logs $NAME 2>&1 | grep -F '[railway]' | tee /dev/stderr | grep -q 'recovered the Gateway lock'"
+
+# In-place restart (Railway restarts keep the container filesystem): boots again.
+docker restart "$NAME" >/dev/null
+check "boots again after an in-place restart" "for i in \$(seq 1 90); do x 'curl -sf http://127.0.0.1:8080/startupz' >/dev/null 2>&1 && exit 0; sleep 2; done; docker logs $NAME 2>&1 | tail -20; exit 1"
+docker kill "$NAME" >/dev/null; docker start "$NAME" >/dev/null
+check "boots again after a crash restart of the same container" "for i in \$(seq 1 90); do x 'curl -sf http://127.0.0.1:8080/startupz' >/dev/null 2>&1 && exit 0; sleep 2; done; docker logs $NAME 2>&1 | tail -20; exit 1"
+
 # Safe boot: a config the gateway cannot start with must not crash-loop forever.
 x 'echo "{ this is not json" > /data/.openclaw/openclaw.json'
 docker rm -f "$NAME" >/dev/null
