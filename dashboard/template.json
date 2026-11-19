@@ -5,8 +5,8 @@
     "OpenClaw": {
       "icon": "https://openclaw.ai/favicon.svg",
       "source": {
-        "image": "ghcr.io/hmseeb/openclaw-dashboard-railway:latest",
-        "$note": "Thin layer over the official ghcr.io/openclaw/openclaw:<version> image (no Chromium), built by .github/workflows/image.yml with OPENCLAW_VARIANT=''. Measured idle RAM about 1.1 GB versus 2.3 GB for the Browser variant once Chromium runs. :latest moves only after test/contract.sh passes (EXPECT_BROWSER=0)."
+        "image": "ghcr.io/hmseeb/openclaw-dashboard-railway:2026.11.5-r1",
+        "$note": "Thin layer over the official ghcr.io/openclaw/openclaw:<version> image (no Chromium), built by .github/workflows/image.yml with OPENCLAW_VARIANT=''. Measured idle RAM on Railway (2026.11.5) about 1.75 GB, the Browser variant about 1.8 GB idle and 3 GB once Chromium runs. Pinned to <version>-r<REVISION>; CI also moves :latest (only after test/contract.sh passes, EXPECT_BROWSER=0) for older deployers."
       },
       "deploy": {
         "healthcheckPath": "/healthz",

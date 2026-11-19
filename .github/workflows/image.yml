@@ -55,13 +55,20 @@ jobs:
           echo "is_latest=$([ "$v" = "$latest" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "OpenClaw $v"
 
-      - name: Skip if this version is already published (scheduled runs only)
+      - name: Listing checks (pinned tags, Hobby-plan notice)
+        run: python3 test/listing_test.py
+
+      # The templates pin <version>-r<REVISION>, so that tag is never overwritten by
+      # a push or a scheduled run; only a manual dispatch can re-push it. Bump
+      # REVISION to ship a change to this repo's layer.
+      - name: Is this revision already published?
         id: skip
-        if: github.event_name == 'schedule'
         run: |
           if docker manifest inspect "$IMAGE:${{ steps.v.outputs.version }}-r$(cat REVISION)" >/dev/null 2>&1; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            [ "${{ github.event_name }}" = schedule ] && echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
+          true
 
       - name: Build
         if: steps.skip.outputs.skip != 'true'
@@ -72,7 +79,7 @@ jobs:
         run: test/contract.sh candidate
 
       - name: Push
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip != 'true' && (steps.skip.outputs.exists != 'true' || github.event_name == 'workflow_dispatch')
         run: |
           echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           # <version>-r<REVISION> is what the templates pin; bump REVISION when this

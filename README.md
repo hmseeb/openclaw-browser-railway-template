@@ -1,8 +1,8 @@
 # OpenClaw for Railway: (w/ Browser) and (w/ Dashboard)
 
-[![Deploy OpenClaw (w/ Browser)](https://railway.com/button.svg)](https://railway.com/deploy/openclaw-w-browser) **OpenClaw (w/ Browser)**: Chromium included for the browser tool, about 2.3 GB RAM with the browser running.
+[![Deploy OpenClaw (w/ Browser)](https://railway.com/button.svg)](https://railway.com/deploy/openclaw-w-browser) **OpenClaw (w/ Browser)**: Chromium included for the browser tool. Needs the Hobby plan: about 1.8 GB RAM idle, about 3 GB with the browser running.
 
-[![Deploy OpenClaw (w/ Dashboard)](https://railway.com/button.svg)](https://railway.com/deploy/openclaw-w-dashboard) **OpenClaw (w/ Dashboard)**: lite, no Chromium, about 1.1 GB RAM.
+[![Deploy OpenClaw (w/ Dashboard)](https://railway.com/button.svg)](https://railway.com/deploy/openclaw-w-dashboard) **OpenClaw (w/ Dashboard)**: lite, no Chromium. Needs the Hobby plan: about 1.75 GB RAM idle.
 
 Two Railway templates for [OpenClaw](https://github.com/openclaw/openclaw) built on
 the official `ghcr.io/openclaw/openclaw:<version>` images (`-browser` variant for the Browser edition). This repo only
@@ -18,7 +18,7 @@ adds what a Railway deploy needs and upstream leaves to the operator.
 | No headless browser (`libnspr4.so` missing) | Chromium ships in the image |
 | Data lost after the agent breaks things | Scheduled backups via upstream's `openclaw backup enable` to `/data/backups` |
 | `brew install` gone after a redeploy | Homebrew, `HOME` and all state live on the `/data` volume |
-| An upstream release breaks the template | CI builds each new release, runs `test/contract.sh`, and only then moves `:latest` |
+| An upstream release breaks the template | CI builds each new release, runs `test/contract.sh`, and only then pushes `<version>-r<REVISION>` and moves `:latest`. The templates pin the `-r` tag. |
 
 ## Layout
 
@@ -35,7 +35,9 @@ adds what a Railway deploy needs and upstream leaves to the operator.
 
 ## Images
 
-- `ghcr.io/hmseeb/openclaw-browser-railway:<openclaw-version>` and `:latest`
-- `ghcr.io/hmseeb/openclaw-dashboard-railway:<openclaw-version>` and `:latest`
+- `ghcr.io/hmseeb/openclaw-browser-railway:<openclaw-version>-r<REVISION>` (pinned by the template), `:<openclaw-version>` and `:latest`
+- `ghcr.io/hmseeb/openclaw-dashboard-railway:<openclaw-version>-r<REVISION>` (pinned by the template), `:<openclaw-version>` and `:latest`
+
+Bump `REVISION` when this repo's layer changes for an OpenClaw version that was already pushed. `test/listing_test.py` checks the pinned tags and the Hobby-plan notice.
 
 The Dashboard sheet and listing live in `dashboard/`; run the scripts with `SHEET_DIR=dashboard`.

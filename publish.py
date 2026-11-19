@@ -17,8 +17,8 @@ WS = "fc4796db-2c6c-4354-a564-d4a1d900af53"
 TID = (HERE / "template-id").read_text().strip()
 NAME = json.loads((HERE / "template.json").read_text())["name"]
 DESC = {
-    "OpenClaw (w/ Browser)": "OpenClaw AI agent with Chromium, shell-free pairing, safe boot and backups",
-    "OpenClaw (w/ Dashboard)": "Lightweight OpenClaw agent with web dashboard, no-shell pairing and backups",
+    "OpenClaw (w/ Browser)": "OpenClaw agent with Chromium and backups. Needs Hobby plan, about 2 GB RAM",
+    "OpenClaw (w/ Dashboard)": "OpenClaw agent with dashboard and backups. Needs Hobby plan, about 2 GB RAM",
 }[NAME]
 ICON = "https://openclaw.ai/favicon.svg"
 assert len(DESC) <= 75 and "\u2014" not in DESC

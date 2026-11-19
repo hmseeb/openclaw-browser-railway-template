@@ -1,8 +1,10 @@
 # Deploy and Host OpenClaw on Railway
 
+> **Needs Railway's Hobby plan (or higher) and about 2 GB of RAM.** Measured on Railway with OpenClaw 2026.11.5, the service idles at about 1.75 GB. Trial (1 GB) and Free (0.5 GB) services run out of memory and restart in a loop.
+
 OpenClaw is a personal AI agent that runs on your own server. Talk to it from the web Control UI, Telegram, WhatsApp, Discord, Slack and 20+ other chat apps. It can browse the web, run commands, manage files and work on tasks around the clock.
 
-This is the **lite** template: the official OpenClaw image without a bundled browser, managed from OpenClaw's web dashboard (the Control UI). It idles at about half the memory of the browser edition. It adds the Railway pieces other OpenClaw templates leave to you: no build step, no shell needed to pair your browser, a config that cannot brick the service, and scheduled backups. Need the agent to drive a real headless Chrome? Deploy **OpenClaw (w/ Browser)** instead.
+This is the **lite** template: the official OpenClaw image without a bundled browser, managed from OpenClaw's web dashboard (the Control UI). It skips the Chromium download and uses less memory once the agent works, since no browser runs. It adds the Railway pieces other OpenClaw templates leave to you: no build step, no shell needed to pair your browser, a config that cannot brick the service, and scheduled backups. Need the agent to drive a real headless Chrome? Deploy **OpenClaw (w/ Browser)** instead.
 
 ## About Hosting OpenClaw
 
@@ -69,11 +71,11 @@ Backups use OpenClaw's own scheduler and land in `/data/backups`, keeping 7 dail
 
 **If OpenClaw breaks itself**
 
-On every boot the config is validated. If it is broken, `openclaw doctor --fix` repairs it and keeps the bad copy as `openclaw.json.clobbered.*`. If doctor cannot fix it, the file is set aside and the last good copy is restored. If the agent is still misbehaving, set `OPENCLAW_SAFE_MODE` to `true` and redeploy.
+On every boot the config is validated. If it is broken, `openclaw doctor --fix` repairs it and keeps the bad copy as `openclaw.json.clobbered.*`. If doctor cannot fix it, the file is set aside and the last good copy is restored. If the agent is still misbehaving, set `OPENCLAW_SAFE_MODE` to `true` and redeploy. If the service was killed (out of memory, crash), the next boot recovers the lock the stopped gateway left on the volume, so it does not stay down.
 
 **Resources and cost**
 
-Measured on Railway: this edition idles at about 1.1 GB of RAM, roughly $12 a month for one always-on instance at Railway's memory pricing, plus your AI provider's charges. It has no bundled browser; the agent fetches pages over HTTP instead. Pick a smaller model with `OPENCLAW_MODEL` to keep provider costs down.
+Measured on Railway (OpenClaw 2026.11.5): this edition idles at about 1.75 GB of RAM, so it needs the Hobby plan. That is roughly $18 a month for one always-on instance at Railway's memory pricing, plus your AI provider's charges. It has no bundled browser; the agent fetches pages over HTTP instead. Pick a smaller model with `OPENCLAW_MODEL` to keep provider costs down.
 
 **Security**
 
@@ -81,7 +83,7 @@ Your gateway is reachable on a public HTTPS URL and protected by `OPENCLAW_GATEW
 
 **Updating**
 
-The template follows the latest OpenClaw release that passed this template's automated checks. To update, redeploy the service.
+New deploys are pinned to a tested image tag, `<openclaw-version>-r<n>` (for example `2026.11.5-r1`). To update, set the service's image to a newer tag from the [image page](https://github.com/hmseeb/openclaw-browser-railway-template/pkgs/container/openclaw-dashboard-railway) and redeploy. Use `:latest` instead to follow every OpenClaw release that passed this template's automated checks.
 
 **Troubleshooting**
 
