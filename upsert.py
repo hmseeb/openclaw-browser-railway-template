@@ -18,6 +18,9 @@ import os
 HERE = pathlib.Path(os.environ.get("SHEET_DIR") or pathlib.Path(__file__).parent)
 # Test copies go to My Projects: TEMPLATE_WS=d10da65a-... TEMPLATE_IDFILE=template-id.test
 WORKSPACE = os.environ.get("TEMPLATE_WS", "fc4796db-2c6c-4354-a564-d4a1d900af53")  # default Auromations
+# Same sheet under another listing name, e.g. the Telegram-first listing:
+# TEMPLATE_NAME="OpenClaw AI Agent (Telegram + Browser)" TEMPLATE_IDFILE=template-id.telegram
+NAME = os.environ.get("TEMPLATE_NAME")
 
 
 def strip_notes(x):
@@ -29,6 +32,10 @@ def strip_notes(x):
 def load_sheet():
     """template.json minus $notes, with "@<file>" values replaced by that file's contents."""
     sheet = strip_notes(json.loads((HERE / "template.json").read_text()))
+    if os.environ.get("TEMPLATE_OVERLAY"):  # per-listing variable copy, e.g. overlay.telegram.json
+        for svc, overrides in strip_notes(json.loads((HERE / os.environ["TEMPLATE_OVERLAY"]).read_text())).items():
+            for k, v in overrides.items():
+                sheet["services"][svc]["variables"][k].update(v)
     for svc in sheet["services"].values():
         for v in svc["variables"].values():
             if v.get("defaultValue", "").startswith("@"):
@@ -65,7 +72,7 @@ def main():
         want["buckets"] = cur.get("buckets") or want["buckets"]
     saved = rw.gql("""mutation($id:String!,$input:TemplateUpsertConfigInput!){
                         templateUpsertConfig(id:$id,input:$input){id code}}""",
-                   {"id": tid, "input": {"name": sheet["name"], "workspaceId": WORKSPACE,
+                   {"id": tid, "input": {"name": NAME or sheet["name"], "workspaceId": WORKSPACE,
                                          "serializedConfig": want, "canvasConfig": {}}}, internal=True)["templateUpsertConfig"]
     idfile.write_text(saved["id"] + "\n")
     print("saved", saved)

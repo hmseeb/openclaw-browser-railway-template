@@ -1,0 +1,11 @@
+{
+  "$note": "Per-listing overrides for OpenClaw AI Agent (Telegram + Browser), merged over template.json by upsert.py when TEMPLATE_OVERLAY=overlay.telegram.json. Only deploy-form copy differs; image and behavior are the Browser sheet's. TELEGRAM_BOT_TOKEN stays optional because the Browser sheet does not require it and boot.sh only adds Telegram when it is set.",
+  "OpenClaw": {
+    "TELEGRAM_BOT_TOKEN": {
+      "description": "Your Telegram bot token. In Telegram, message @BotFather, send /newbot, pick a name and a username ending in bot, and paste the token here. Optional: you can add it later and redeploy. After deploy, DM your bot and approve the pairing code in the Control UI."
+    },
+    "ANTHROPIC_API_KEY": {
+      "description": "AI provider key for your agent. Set at least one: this, or OpenAI, OpenRouter or Gemini below. You can change keys later and redeploy."
+    }
+  }
+}

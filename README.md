@@ -4,7 +4,10 @@
 
 [![Deploy OpenClaw (w/ Dashboard)](https://railway.com/button.svg)](https://railway.com/deploy/openclaw-w-dashboard) **OpenClaw (w/ Dashboard)**: lite, no Chromium. Needs the Hobby plan: about 1.75 GB RAM idle.
 
-Two Railway templates for [OpenClaw](https://github.com/openclaw/openclaw) built on
+[![Deploy OpenClaw AI Agent (Telegram + Browser)](https://railway.com/button.svg)](https://railway.com/deploy/openclaw-ai-agent-telegram-browser) **OpenClaw AI Agent (Telegram + Browser)**: the Browser edition listed for people who want a Telegram agent. Same image and config; Telegram-first readme (`TEMPLATE_OVERVIEW.telegram.md`) and deploy-form copy (`overlay.telegram.json`). Id in `template-id.telegram`.
+Update it with `TEMPLATE_NAME="OpenClaw AI Agent (Telegram + Browser)" TEMPLATE_IDFILE=template-id.telegram TEMPLATE_OVERLAY=overlay.telegram.json upsert.py`.
+
+Railway templates for [OpenClaw](https://github.com/openclaw/openclaw) built on
 the official `ghcr.io/openclaw/openclaw:<version>` images (`-browser` variant for the Browser edition). This repo only
 adds what a Railway deploy needs and upstream leaves to the operator.
 
